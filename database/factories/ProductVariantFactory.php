@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,7 +18,7 @@ class ProductVariantFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word,
+            'name' => Str::title($this->faker->sentence(10)),
             'sku' => $this->faker->unique()->regexify('[A-Z0-9]{10}'),
             'additional_cost' => $this->faker->randomFloat(2, 0, 20),
             'stock_count' => $this->faker->numberBetween(0, 100),
