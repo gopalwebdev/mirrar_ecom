@@ -23,20 +23,15 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::prefix('v1')->group(function () {
     /* Product search */
-    Route::get('search_product_via_meilisearch', [ProductController::class, 'searchProductViaMeilisearch']);
     Route::get('products/search', [ProductController::class, 'search']);
 
     /* Product */
     Route::get('products', [ProductController::class, 'index']);
     Route::post('products', [ProductController::class, 'store']);
     Route::get('products/{id}', [ProductController::class, 'show']);
-    Route::put('product', [ProductController::class, 'update']);
+    Route::put('products/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
 
     /* Product Variant */
     Route::get('product_variants', [ProductVariantController::class, 'index']);
-    Route::post('product_variants', [ProductVariantController::class, 'store']);
-    Route::get('product_variants/{id}', [ProductVariantController::class, 'show']);
-    Route::put('product_variants', [ProductVariantController::class, 'update']);
-    Route::delete('product_variants/{id}', [ProductVariantController::class, 'destroy']);
 });
