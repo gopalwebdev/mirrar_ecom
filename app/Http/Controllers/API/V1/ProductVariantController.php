@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\API\V1;
 
-use App\Http\Controllers\Controller;
-use App\Models\ProductVariant;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use App\Models\ProductVariant;
+use App\Http\Controllers\Controller;
 
 class ProductVariantController extends Controller
 {
@@ -14,10 +15,13 @@ class ProductVariantController extends Controller
     public function index()
     {
         $product_variants = ProductVariant::query()
-            ->withCount('products')
             ->paginate(20);
 
-        return $product_variants;
+        return response()->json([
+            "status_code" => Response::HTTP_OK,
+            "message" => "OK",
+            "data" => $product_variants
+        ], Response::HTTP_OK);
     }
 
     /**

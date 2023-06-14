@@ -16,41 +16,6 @@ class ProductController extends Controller
      * Display a listing of the resource.
      */
 
-    public function searchProductViaMeilisearch(Request $request)
-    {
-        if ($request->except('query')) {
-            return response()->json([
-                "status_code" => Response::HTTP_BAD_REQUEST,
-                "message" => "BAD REQUEST",
-            ], Response::HTTP_BAD_REQUEST);
-        }
-
-
-        $validator = Validator::make($request->all(), [
-            'query' => 'nullable|string|max:90',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                "status_code" => Response::HTTP_UNPROCESSABLE_ENTITY,
-                "message" => "UNPROCESSABLE ENTITY",
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $search_query = $request->get('query');
-
-        $products = Product::search($search_query)
-            ->get();
-
-        return response()->json([
-            "status_code" => Response::HTTP_OK,
-            "message" => "OK",
-            "data" => $products
-        ], Response::HTTP_OK);
-
-        return $products;
-    }
-
     public function search(Request $request)
     {
         if ($request->except('query')) {
@@ -99,8 +64,6 @@ class ProductController extends Controller
             "message" => "OK",
             "data" => $products
         ], Response::HTTP_OK);
-
-        return $products;
     }
 
     public function index()
@@ -155,7 +118,7 @@ class ProductController extends Controller
                     'name' => $request->get('product_variant_name'),
                     'sku' => $request->get('sku'),
                     'additional_cost' => $request->get('additional_cost'),
-                    'stock_count' => 1
+                    'stock_count' => 0
                 ]);
         }
 
@@ -165,9 +128,9 @@ class ProductController extends Controller
             ->first();
 
         if ($product) {
+
             Product::query()
                 ->update([
-                    'name' => $request->get('name'),
                     'description' => $request->get('description'),
                     'price' => $request->get('price')
                 ]);
@@ -179,9 +142,9 @@ class ProductController extends Controller
                     'description' => $request->get('description'),
                     'price' => $request->get('price')
                 ]);
-
-            $product_variant->increment('stock_count');
         }
+
+        $product_variant->increment('stock_count');
 
 
         return response()->json([
@@ -312,9 +275,10 @@ class ProductController extends Controller
         }
 
         $product = Product::query()
-            ->where('id', $request->id);
+            ->where('id', $request->id)
+            ->first();
 
-        if ($product->doesntExist()) {
+        if (!$product) {
             return response()->json([
                 "status_code" => Response::HTTP_NOT_FOUND,
                 "message" => "NOT FOUND",
@@ -323,8 +287,15 @@ class ProductController extends Controller
 
         $product->delete();
 
-        ProductVariant::query()
-            ->decrement('stock_count');
+        $product_variant = ProductVariant::query()
+            ->where('id', $product->product_variant_id)
+            ->first();
+
+        if ($product_variant->stock_count > 1) {
+            $product_variant->decrement(1);
+        } else {
+            $product_variant->delete();
+        }
 
 
         return response()->json([
@@ -332,28 +303,4 @@ class ProductController extends Controller
             "message" => "OK",
         ], Response::HTTP_OK);
     }
-
-    // public function getMeilisearchIndex(string $index_name)
-    // {
-    //     $meilisearch_client = new Client(config('scout.meilisearch.host'));
-    //     return $meilisearch_client->getIndex($index_name);
-    // }
-
-    // public function deleteProductFromMeilisearch(int $product_id)
-    // {
-    //     $products_meilisearch_index = $this->getMeilisearchIndex("products");
-    //     return $products_meilisearch_index->deleteDocument($product_id);
-    // }
-
-    // public function addProductFromMeilisearch(array $product)
-    // {
-    //     $products_meilisearch_index = $this->getMeilisearchIndex("products");
-    //     return $products_meilisearch_index->deleteDocument([$product]);
-    // }
-
-    // public function updateProductFromMeilisearch(array $product)
-    // {
-    //     $products_meilisearch_index = $this->getMeilisearchIndex("products");
-    //     return $products_meilisearch_index->deleteDocument([$product]);
-    // }
 }
