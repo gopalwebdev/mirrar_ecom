@@ -14,7 +14,6 @@ class ProductVariantController extends Controller
     public function index()
     {
         $product_variants = ProductVariant::query()
-            ->with('products')
             ->withCount('products')
             ->paginate(20);
 
