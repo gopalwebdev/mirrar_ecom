@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\API\V1;
 
-use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Meilisearch\Client;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -95,7 +96,6 @@ class ProductController extends Controller
         return response()->json([
             "status_code" => Response::HTTP_OK,
             "message" => "OK",
-            "limit" => 10,
             "data" => $products
         ], Response::HTTP_OK);
 
@@ -108,7 +108,11 @@ class ProductController extends Controller
             ->with('product_variant')
             ->paginate(20);
 
-        return $products;
+        return response()->json([
+            "status_code" => Response::HTTP_OK,
+            "message" => "OK",
+            "data" => $products
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -122,9 +126,38 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request)
     {
-        //
+
+        $validator = Validator::make($request->all(), [
+            'id' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status_code" => Response::HTTP_UNPROCESSABLE_ENTITY,
+                "message" => "UNPROCESSABLE ENTITY",
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $product = Product::query()
+            ->where('id', $request->id)
+            ->with('product_variant')
+            ->first();
+
+
+        if (!$product) {
+            return response()->json([
+                "status_code" => Response::HTTP_NOT_FOUND,
+                "message" => "NOT FOUND",
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json([
+            "status_code" => Response::HTTP_OK,
+            "message" => "OK",
+            "data" => $product
+        ], Response::HTTP_OK);
     }
 
     /**
@@ -138,8 +171,40 @@ class ProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'id' => 'integer',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                "status_code" => Response::HTTP_UNPROCESSABLE_ENTITY,
+                "message" => "UNPROCESSABLE ENTITY",
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $product = Product::query()
+            ->where('id', $request->id);
+
+        if ($product->doesntExist()) {
+            return response()->json([
+                "status_code" => Response::HTTP_NOT_FOUND,
+                "message" => "NOT FOUND",
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $product->delete();
+
+        $meilisearch_client = new Client(config('scout.meilisearch.host'));
+        $meilisearch_index = $meilisearch_client->getIndex('products');
+
+        // Remove the product document from the MeiliSearch index
+        $meilisearch_index->deleteDocument($request->id);
+
+        return response()->json([
+            "status_code" => Response::HTTP_OK,
+            "message" => "OK",
+        ], Response::HTTP_OK);
     }
 }

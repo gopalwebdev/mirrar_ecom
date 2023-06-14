@@ -26,7 +26,7 @@ class Product extends Model
 
     public function searchableAs(): string
     {
-        return 'products_index';
+        return 'products';
     }
 
 

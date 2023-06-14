@@ -22,17 +22,21 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::prefix('v1')->group(function () {
-    Route::get('products', [ProductController::class, 'index']);
-    Route::get('products/search', [ProductController::class, 'search']);
+    /* Product search */
     Route::get('search_product_via_meilisearch', [ProductController::class, 'searchProductViaMeilisearch']);
-    Route::post('products', [ProductController::class, 'store']);
-    Route::get('products/{name}', [ProductController::class, 'show']);
-    Route::put('products/{name}', [ProductController::class, 'update']);
-    Route::delete('products/{name}', [ProductController::class, 'destroy']);
+    Route::get('products/search', [ProductController::class, 'search']);
 
+    /* Product */
+    Route::get('products', [ProductController::class, 'index']);
+    Route::post('products', [ProductController::class, 'store']);
+    Route::get('products/{id}', [ProductController::class, 'show']);
+    Route::put('product', [ProductController::class, 'update']);
+    Route::delete('products/{id}', [ProductController::class, 'destroy']);
+
+    /* Product Variant */
     Route::get('product_variants', [ProductVariantController::class, 'index']);
     Route::post('product_variants', [ProductVariantController::class, 'store']);
-    Route::get('product_variants/{name}', [ProductVariantController::class, 'show']);
-    Route::put('product_variants/{name}', [ProductVariantController::class, 'update']);
-    Route::delete('product_variants/{name}', [ProductVariantController::class, 'destroy']);
+    Route::get('product_variants/{id}', [ProductVariantController::class, 'show']);
+    Route::put('product_variants', [ProductVariantController::class, 'update']);
+    Route::delete('product_variants/{id}', [ProductVariantController::class, 'destroy']);
 });
